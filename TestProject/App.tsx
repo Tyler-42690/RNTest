@@ -1,118 +1,54 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useRef, useEffect } from 'react';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import UnityView from '@azesmway/react-native-unity';
+import { View } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const App = () => {
+  const unityRef = useRef<UnityView>(null);
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
 
-function Section({children, title}: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
 
-function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+// delay function help us control when to send the data to unity in ms.
+  const delay = (ms: number) => new Promise((resolve:any) => setTimeout(resolve, ms));
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+// Send Data function is uses the main function that send the data to Unity.
+// With the delay.
+  async function SendData(data: any) {
+    await delay(500);
+    // This is the main function postMessage take 3 arguments ReacttoUnity is the game Object
+    // GetDatas is the function name we will send the data to in Unity depends on hierarchy.
+    // data is the data we will send.
+    unityRef.current?.postMessage('ReactToUnity', 'GetDatas', data);
+  }
+
+const unityData = {
+     name: "Integration",
+     age: 25,
   };
 
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
+  const jsonedData = JSON.stringify(unityData);
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+  useEffect(() => {
+    SendData(jsonedData);
+   }, []);
+
+  return (
+    <View style={{ flex: 1 }}>
+      <UnityView
+        ref={unityRef}
+        style={{
+          position: 'absolute',
+          height: '100%',
+          width: '100%',
+          top: 1,
+          bottom: 1
+        }}
+        onUnityMessage={(result) => {
+          console.log('Message Here : ', result.nativeEvent.message)
+        }}
+      />
+    </View>
+  );
+};
 
 export default App;
